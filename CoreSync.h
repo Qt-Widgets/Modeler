@@ -15,12 +15,11 @@ class CoreSync final {
 public:
     typedef std::function<void(Core::WeakPointer<Core::Engine>)> Runnable;
 
-    CoreSync(RenderWindow* renderSurface);
+    CoreSync();
     ~CoreSync();
     void run(Runnable runnable);
 
 private:
-    RenderWindow* renderWindow;
-    QMutex sync;
+
 };
 

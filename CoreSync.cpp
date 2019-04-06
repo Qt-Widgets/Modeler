@@ -1,7 +1,8 @@
-#include "CoreSync.h"
-#include "RenderWindow.h"
+#include "Core/Engine.h"
 
-CoreSync::CoreSync(RenderWindow* renderWindow): renderWindow(renderWindow) {
+#include "CoreSync.h"
+
+CoreSync::CoreSync() {
 
 }
 
@@ -10,9 +11,8 @@ CoreSync::~CoreSync() {
 }
 
 void CoreSync::run(Runnable runnable) {
-    RenderWindow::LifeCycleEventCallback temp = [this, runnable](RenderWindow* renderWindow) {
-        runnable(this->renderWindow->getEngine());
+    Core::Engine::LifecycleEventCallback temp = [this, runnable]() {
+        runnable(Core::Engine::instance());
     };
-    renderWindow->onUpdate(temp);
+    Core::Engine::instance()->onUpdate(temp, false);
 }
-

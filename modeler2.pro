@@ -1,6 +1,5 @@
 HEADERS       = \
     ModelerApp.h \
-    MainContainer.h \
     RenderWindow.h \
     OpenGLMouseAdapterWidget.h \
     MouseAdapter.h \
@@ -11,11 +10,21 @@ HEADERS       = \
     OrbitControls.h \
     MainWindow.h \
     CoreScene.h \
-    Exception.h
+    Exception.h \
+    MainGUI.h \
+    BasicRimShadowMaterial.h \
+    TransformWidget.h \
+    SceneTreeWidget.h \
+    KeyboardAdapter.h \
+    SceneUtils.h \
+    Scene/CornfieldScene.h \
+    Scene/RedSkyScene.h \
+    Scene/ModelerScene.h \
+    Scene/SceneHelper.h \
+    Util/FileUtil.h
 SOURCES       = \
-                main.cpp \
+    main.cpp \
     ModelerApp.cpp \
-    MainContainer.cpp \
     RenderWindow.cpp \
     MainWindow.cpp \
     OpenGLMouseAdapterWidget.cpp \
@@ -25,7 +34,18 @@ SOURCES       = \
     GestureAdapter.cpp \
     OrbitControls.cpp \
     CoreScene.cpp \
-    Exception.cpp
+    Exception.cpp \
+    MainGUI.cpp \
+    BasicRimShadowMaterial.cpp \
+    TransformWidget.cpp \
+    SceneTreeWidget.cpp \
+    KeyboardAdapter.cpp \
+    SceneUtils.cpp \
+    Scene/CornfieldScene.cpp \
+    Scene/RedSkyScene.cpp \
+    Scene/ModelerScene.cpp \
+    Scene/SceneHelper.cpp \
+    Util/FileUtil.cpp
 
 QT           += widgets
 

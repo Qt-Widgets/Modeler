@@ -1,11 +1,13 @@
 #include "CoreScene.h"
 
+#include "Core/render/Camera.h"
+
 CoreScene::CoreScene() {
 
 }
 
-CoreScene::CoreScene(Core::WeakPointer<Core::Object3D> sceneRoot) {
-    this->setSceneRoot(sceneRoot);
+void CoreScene::setEngine(Core::WeakPointer<Core::Engine> engine) {
+    this->engine = engine;
 }
 
 Core::WeakPointer<Core::Object3D> CoreScene::getSceneRoot() const {
@@ -31,21 +33,88 @@ void CoreScene::onSceneUpdated(SceneUpdatedCallback callback) {
     this->sceneUpdatedCallbacks.push_back(callback);
 }
 
-Core::WeakPointer<Core::Object3D> CoreScene::getSelectedObject() {
-    return this->selectedObject;
+std::vector<Core::WeakPointer<Core::Object3D>>& CoreScene::getSelectedObjects() {
+    return this->selectedObjects;
 }
 
-void CoreScene::setSelectedObject(Core::WeakPointer<Core::Object3D> newSelectedObject) {
-    if ((this->selectedObject.isValid() && !newSelectedObject.isValid()) ||
-        (!this->selectedObject.isValid() && newSelectedObject.isValid()) ||
-         newSelectedObject.get() != this->selectedObject.get()) {
-        this->selectedObject = newSelectedObject;
-        for (OnObjectSelectedCallback callback : this->objectSelectedCallbacks) {
+void CoreScene::addSelectedObject(Core::WeakPointer<Core::Object3D> newSelectedObject) {
+    if (newSelectedObject.isValid() && !this->isObjectSelected(newSelectedObject)) {
+        this->selectedObjects.push_back(newSelectedObject);
+        for (OnObjectSelectedCallback callback : this->selectedObjectAddedCallbacks) {
             callback(newSelectedObject);
         }
     }
 }
 
-void CoreScene::onObjectSelected(OnObjectSelectedCallback callback) {
-    this->objectSelectedCallbacks.push_back(callback);
+void CoreScene::removeSelectedObject(Core::WeakPointer<Core::Object3D> objectToRemove) {
+    if (this->selectedObjects.size() > 0) {
+        for (unsigned int i = 0; i < this->selectedObjects.size(); i++) {
+            Core::WeakPointer<Core::Object3D> selectedObject = this->selectedObjects[i];
+            if(selectedObject.get() == objectToRemove.get()) {
+                this->removeSelectedObjectAtIndex(i);
+                return;
+            }
+        }
+    }
+}
+
+void CoreScene::removeSelectedObjectAtIndex(unsigned int index) {
+    Core::WeakPointer<Core::Object3D> objectToRemove = this->selectedObjects[index];
+    this->selectedObjects[index] = this->selectedObjects[this->selectedObjects.size() - 1];
+    this->selectedObjects.pop_back();
+    for (OnObjectSelectedCallback callback : this->selectedObjectRemovedCallbacks) {
+        callback(objectToRemove);
+    }
+    return;
+}
+
+void CoreScene::clearSelectedObjects() {
+    while (this->selectedObjects.size() > 0) {
+        removeSelectedObjectAtIndex(0);
+    }
+}
+
+void CoreScene::onSelectedObjectAdded(OnObjectSelectedCallback callback) {
+    this->selectedObjectAddedCallbacks.push_back(callback);
+}
+
+void CoreScene::onSelectedObjectRemoved(OnObjectSelectedCallback callback) {
+    this->selectedObjectRemovedCallbacks.push_back(callback);
+}
+
+bool CoreScene::isObjectSelected(Core::WeakPointer<Core::Object3D> candidateObject) {
+    for (std::vector<Core::WeakPointer<Core::Object3D>>::iterator itr = this->selectedObjects.begin(); itr != this->selectedObjects.end(); ++itr) {
+        Core::WeakPointer<Core::Object3D> selectedObject = *itr;
+        if(selectedObject.get() == candidateObject.get()) return true;
+    }
+    return false;
+}
+
+void CoreScene::rayCastForObjectSelection(Core::WeakPointer<Core::Camera> camera, Core::Int32 x, Core::Int32 y, bool setSelectedObject,  bool multiSelect) {
+    Core::WeakPointer<Core::Graphics> graphics = this->engine->getGraphicsSystem();
+    Core::Vector4u viewport = graphics->getViewport();
+    Core::Ray ray = camera->getRay(viewport, x, y);
+    std::vector<Core::Hit> hits;
+    Core::Bool hitOccurred = this->sceneRaycaster.castRay(ray, hits);
+
+    if (hitOccurred) {
+        Core::Hit& hit = hits[0];
+        Core::WeakPointer<Core::Mesh> hitObject = hit.Object;
+        Core::WeakPointer<Core::Object3D> rootObject =this->meshToObjectMap[hitObject->getObjectID()];
+
+        if (setSelectedObject) {
+            if (multiSelect) {
+                this->addSelectedObject(rootObject);
+            }
+            else {
+                this->clearSelectedObjects();
+                this->addSelectedObject(rootObject);
+            }
+        }
+    }
+}
+
+void CoreScene::addObjectToSceneRaycaster(Core::WeakPointer<Core::Object3D> object, Core::WeakPointer<Core::Mesh> mesh) {
+    this->sceneRaycaster.addObject(object, mesh);
+    this->meshToObjectMap[mesh->getObjectID()] = object;
 }

@@ -30,8 +30,9 @@ int main(int argc, char *argv[])
     QSurfaceFormat fmt;
     fmt.setStencilBufferSize(8);
     fmt.setDepthBufferSize(24);
-    if (parser.isSet(multipleSampleOption))
+    if (parser.isSet(multipleSampleOption)) {
         fmt.setSamples(4);
+    }
     //if (parser.isSet(coreProfileOption)) {
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -43,9 +44,10 @@ int main(int argc, char *argv[])
     ModelerApp* modelerApp = new ModelerApp;
     modelerApp->init();
 
-    MainContainer * mainContainer = mainWindow.getMainContainer();
-    mainContainer->setApp(modelerApp);
-    RenderWindow * renderWindow = mainContainer->getRenderWindow();
+    MainGUI * mainGUI = mainWindow.getMainGUI();
+    mainGUI->setModelerApp(modelerApp);
+    mainGUI->setQtApp(&app);
+    RenderWindow * renderWindow = mainGUI->getRenderWindow();
     modelerApp->setRenderWindow(renderWindow);
 
     RenderWindow::setTransparent(parser.isSet(transparentOption) && false);

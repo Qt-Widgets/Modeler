@@ -9,8 +9,8 @@
 
 bool RenderWindow::m_transparent = false;
 
-RenderWindow::RenderWindow(QWidget *parent): OpenGLMouseAdapterWidget(parent), m_xRot(0), m_yRot(0), m_zRot(0),
-                         m_program(0), initialized(false), engineInitialized(false), engine(nullptr)
+RenderWindow::RenderWindow(QWidget *parent): OpenGLMouseAdapterWidget(parent),
+                           initialized(false), engineInitialized(false), engine(nullptr)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
@@ -79,9 +79,9 @@ void RenderWindow::paintGL()
         this->engine->setDefaultRenderTargetToCurrent();
         _inited = true;
     }
+
+    QMutexLocker ml(&this->updateMutex);
     this->update();
-    this->resolveOnUpdates();
-    this->resolveOnPreRenders();
     this->render();
 
 }
@@ -115,16 +115,6 @@ void RenderWindow::onInit(LifeCycleEventCallback func) {
     }
 }
 
-void RenderWindow::onPreRender(LifeCycleEventCallback func) {
-    QMutexLocker ml(&this->preRenderMutex);
-    onPreRenders.push_back(func);
-}
-
-void RenderWindow::onUpdate(LifeCycleEventCallback func) {
-    QMutexLocker ml(&this->updateMutex);
-    onUpdates.push_back(func);
-}
-
 void RenderWindow::resolveOnInits() {
     for(std::vector<LifeCycleEventCallback>::iterator itr = onInits.begin(); itr != onInits.end(); ++itr) {
         LifeCycleEventCallback func = *itr;
@@ -134,26 +124,4 @@ void RenderWindow::resolveOnInits() {
 
 void RenderWindow::resolveOnInit(LifeCycleEventCallback callback) {
     callback(this);
-}
-
-void RenderWindow::resolveOnUpdates() {
-    if (onUpdates.size() > 0) {
-        QMutexLocker ml(&this->updateMutex);
-        for(std::vector<LifeCycleEventCallback>::iterator itr = onUpdates.begin(); itr != onUpdates.end(); ++itr) {
-            LifeCycleEventCallback func = *itr;
-            func(this);
-        }
-        onUpdates.clear();
-    }
-}
-
-void RenderWindow::resolveOnPreRenders() {
-    if (onPreRenders.size() > 0) {
-        QMutexLocker ml(&this->preRenderMutex);
-        for(std::vector<LifeCycleEventCallback>::iterator itr = onPreRenders.begin(); itr != onPreRenders.end(); ++itr) {
-            LifeCycleEventCallback func = *itr;
-            func(this);
-        }
-        onPreRenders.clear();
-    }
 }

@@ -36,8 +36,7 @@ public:
 
     Core::WeakPointer<Core::Engine> getEngine();
     void onInit(LifeCycleEventCallback func);
-    void onUpdate(LifeCycleEventCallback func);
-    void onPreRender(LifeCycleEventCallback func);
+    QMutex& getUpdateMutex();
 
 public slots:
     void cleanup();
@@ -52,38 +51,20 @@ protected:
 private:
 
     bool m_core;
-    int m_xRot;
-    int m_yRot;
-    int m_zRot;
-    QPoint m_lastPos;
     QOpenGLVertexArrayObject m_vao;
-    QOpenGLBuffer m_logoVbo;
-    QOpenGLShaderProgram *m_program;
-    int m_projMatrixLoc;
-    int m_mvMatrixLoc;
-    int m_normalMatrixLoc;
-    int m_lightPosLoc;
-    QMatrix4x4 m_proj;
-    QMatrix4x4 m_camera;
-    QMatrix4x4 m_world;
     static bool m_transparent;
-
-
 
     void init();
     void update();
     void render();
     void resolveOnInits();
     void resolveOnInit(LifeCycleEventCallback callback);
-    void resolveOnUpdates();
-    void resolveOnPreRenders();
 
-    QMutex preRenderMutex;
+    QMutex onPreRenderMutex;
+    QMutex onUpdateMutex;
     QMutex updateMutex;
     bool initialized;
     bool engineInitialized;
     Core::PersistentWeakPointer<Core::Engine> engine;
     std::vector<LifeCycleEventCallback> onInits;
-    std::vector<LifeCycleEventCallback> onUpdates;
-    std::vector<LifeCycleEventCallback> onPreRenders;
 };
